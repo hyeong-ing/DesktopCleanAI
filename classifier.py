@@ -1,4 +1,5 @@
 import re
+import unicodedata
 
 from scanner import scan_desktop_files, scan_destination_folders
 from rules import read_rules
@@ -66,7 +67,9 @@ def classify_by_rules(file_path, rules, destination_folder_names):
     2. 규칙의 폴더 이름이 실제 이동 목적지 폴더에 존재해야 한다.
     """
     filename = file_path.name
-    filename_lower = filename.lower()
+
+    # macOS 한글 파일명 비교를 위해 정규화한다.
+    normalized_filename = normalize_text(filename)
 
     for folder_name, keywords in rules.items():
         # 실제 폴더가 없는 규칙은 사용하지 않는다.
@@ -74,9 +77,9 @@ def classify_by_rules(file_path, rules, destination_folder_names):
             continue
 
         for keyword in keywords:
-            keyword_lower = keyword.lower()
+            normalized_keyword = normalize_text(keyword)
 
-            if keyword_lower in filename_lower:
+            if normalized_keyword in normalized_filename:
                 return {
                     "filename": filename,
                     "targetFolder": folder_name,
@@ -136,3 +139,18 @@ if __name__ == "__main__":
                 f"/ 출처: {result['source']} "
                 f"/ 이유: {result['reason']}"
             )
+            
+
+def normalize_text(text):
+    """
+    한글 문자열 비교를 위해 문자열 형태를 통일하는 함수
+
+    macOS에서는 파일명의 한글이 자모 분리된 형태로 들어올 수 있다.
+    예:
+    스프링
+    스프링
+
+    사람이 보기에는 같지만 컴퓨터는 다르게 볼 수 있으므로,
+    NFC 형태로 통일한 뒤 소문자로 바꿔 비교한다.
+    """
+    return unicodedata.normalize("NFC", text).lower()
