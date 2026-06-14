@@ -2,6 +2,7 @@ import argparse
 import shutil
 from pathlib import Path
 
+from log_store import save_move_session
 from scanner import get_desktop_path
 from path_planner import build_path_plan
 
@@ -295,9 +296,20 @@ if __name__ == "__main__":
 
     else:
         confirmed = ask_confirmation()
+    
 
         if not confirmed:
             print("파일 이동을 취소했습니다.")
         else:
             results = execute_move_plan(path_plan, dry_run=False)
             print_execution_results(results)
+
+            session = save_move_session(results)
+
+            if session is None:
+                print("저장할 이동 로그가 없습니다.")
+            else:
+                print()
+                print("이동 로그를 저장했습니다.")
+                print(f"세션 ID: {session['sessionId']}")
+                print(f"저장 위치: {get_desktop_path() / '.deskpilot' / 'move-log.json'}")
