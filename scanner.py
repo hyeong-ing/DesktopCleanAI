@@ -1,26 +1,10 @@
 from pathlib import Path
 
-
-# 테스트용 가짜 Desktop 폴더 이름
-TEST_DESKTOP_FOLDER_NAME = "test_desktop"
-
-
-# 정리 대상에서 제외할 파일 이름 목록
-EXCLUDED_FILENAMES = {
-    ".DS_Store",
-    "desktop.ini",
-    "Thumbs.db",
-    "rules.txt",
-    "move-log.json",
-}
-
-
-# 이동 목적지 폴더 목록에서 제외할 폴더 이름
-EXCLUDED_FOLDER_NAMES = {
-    ".deskpilot",
-    "__pycache__",
-}
-
+from config import (
+    TEST_DESKTOP_FOLDER_NAME,
+    EXCLUDED_FILENAMES,
+    EXCLUDED_FOLDER_NAMES,
+)
 
 def get_desktop_path():
     """
