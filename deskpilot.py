@@ -2,6 +2,7 @@ import argparse
 from pathlib import Path
 
 from path_planner import build_path_plan, print_path_plan
+from config import APP_FOLDER_NAME
 
 from selected_mover import (
     print_selectable_plan,
@@ -109,7 +110,7 @@ def run_move(apply=False):
         print()
         print("이동 로그를 저장했습니다.")
         print(f"세션 ID: {session['sessionId']}")
-        print(f"저장 위치: {get_desktop_path() / '.deskpilot' / 'move-log.json'}")
+        print(f"저장 위치: {get_desktop_path() / APP_FOLDER_NAME / 'move-log.json'}")
 
 
 def run_undo(apply=False):
