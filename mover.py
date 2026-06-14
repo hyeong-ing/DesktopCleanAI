@@ -1,13 +1,19 @@
+import argparse
+import shutil
 from pathlib import Path
 
+from scanner import get_desktop_path
 from path_planner import build_path_plan
+
+
+CONFIRM_TEXT = "정리하기"
 
 
 def create_result(item, status, message):
     """
     이동 실행 결과를 딕셔너리로 만드는 함수
 
-    나중에 move-log.json을 만들 때도 이런 구조를 사용할 수 있다.
+    나중에 move-log.json에 저장할 때도 이 구조를 사용할 수 있다.
     """
     return {
         "filename": item.get("filename"),
@@ -20,21 +26,39 @@ def create_result(item, status, message):
     }
 
 
+def is_inside_base_path(path, base_path):
+    """
+    주어진 path가 base_path 내부에 있는지 확인하는 함수
+
+    안전장치:
+    test_desktop 밖의 파일을 실수로 이동하지 않기 위해 사용한다.
+    """
+    try:
+        path.resolve().relative_to(base_path.resolve())
+        return True
+    except ValueError:
+        return False
+
+
 def execute_move_plan(path_plan, dry_run=True):
     """
     이동 계획을 실행하는 함수
 
-    지금 챕터에서는 dry_run=True만 사용한다.
-    즉, 실제 파일을 이동하지 않고 이동 예정 정보만 결과로 만든다.
+    dry_run=True:
+    실제 파일 이동 없이 예정 정보만 확인한다.
+
+    dry_run=False:
+    실제로 파일을 이동한다.
     """
     results = []
+    base_path = get_desktop_path()
 
     for item in path_plan:
         action = item.get("action")
         original_path_text = item.get("originalPath")
         target_path_text = item.get("targetPath")
 
-        # KEEP 항목은 이동하지 않는다.
+        # MOVE가 아닌 항목은 이동하지 않는다.
         if action != "MOVE":
             results.append(
                 create_result(
@@ -70,6 +94,17 @@ def execute_move_plan(path_plan, dry_run=True):
             )
             continue
 
+        # 원본이 파일이 아니면 이동하지 않는다.
+        if not original_path.is_file():
+            results.append(
+                create_result(
+                    item,
+                    "ERROR",
+                    "원본 경로가 파일이 아닙니다.",
+                )
+            )
+            continue
+
         # 대상 폴더가 실제로 없으면 이동할 수 없다.
         if not target_path.parent.exists():
             results.append(
@@ -77,6 +112,49 @@ def execute_move_plan(path_plan, dry_run=True):
                     item,
                     "ERROR",
                     "대상 폴더를 찾을 수 없습니다.",
+                )
+            )
+            continue
+
+        # 대상 폴더가 폴더가 아니면 이동할 수 없다.
+        if not target_path.parent.is_dir():
+            results.append(
+                create_result(
+                    item,
+                    "ERROR",
+                    "대상 경로의 부모가 폴더가 아닙니다.",
+                )
+            )
+            continue
+
+        # test_desktop 밖으로 이동하려는 경우 차단한다.
+        if not is_inside_base_path(original_path, base_path):
+            results.append(
+                create_result(
+                    item,
+                    "ERROR",
+                    "원본 파일이 test_desktop 밖에 있어 이동하지 않습니다.",
+                )
+            )
+            continue
+
+        if not is_inside_base_path(target_path, base_path):
+            results.append(
+                create_result(
+                    item,
+                    "ERROR",
+                    "대상 경로가 test_desktop 밖에 있어 이동하지 않습니다.",
+                )
+            )
+            continue
+
+        # 혹시 대상 경로에 이미 파일이 있으면 덮어쓰지 않는다.
+        if target_path.exists():
+            results.append(
+                create_result(
+                    item,
+                    "ERROR",
+                    "대상 경로에 이미 파일이 있어 덮어쓰지 않습니다.",
                 )
             )
             continue
@@ -92,24 +170,36 @@ def execute_move_plan(path_plan, dry_run=True):
             )
             continue
 
-        # 실제 이동은 다음 챕터에서 구현한다.
-        results.append(
-            create_result(
-                item,
-                "NOT_IMPLEMENTED",
-                "실제 이동 기능은 아직 구현하지 않았습니다.",
+        # 실제 파일 이동
+        try:
+            shutil.move(str(original_path), str(target_path))
+
+            results.append(
+                create_result(
+                    item,
+                    "SUCCESS",
+                    "파일 이동을 완료했습니다.",
+                )
             )
-        )
+
+        except Exception as error:
+            results.append(
+                create_result(
+                    item,
+                    "ERROR",
+                    f"파일 이동 중 오류가 발생했습니다: {error}",
+                )
+            )
 
     return results
 
 
 def print_execution_results(results):
     """
-    dry-run 실행 결과를 터미널에 출력하는 함수
+    이동 실행 결과를 터미널에 출력하는 함수
     """
-    print("Dry Run 이동 실행 결과")
-    print("--------------------")
+    print("파일 이동 실행 결과")
+    print("----------------")
 
     if not results:
         print("실행할 이동 계획이 없습니다.")
@@ -129,6 +219,13 @@ def print_execution_results(results):
             print(f"  메시지: {message}")
             print()
 
+        elif status == "SUCCESS":
+            print(f"[이동 완료] {filename}")
+            print(f"  원본: {original_path}")
+            print(f"  대상: {target_path}")
+            print(f"  메시지: {message}")
+            print()
+
         elif status == "SKIPPED":
             print(f"[건너뜀] {filename}")
             print(f"  이유: {message}")
@@ -142,10 +239,65 @@ def print_execution_results(results):
             print()
 
 
+def ask_confirmation():
+    """
+    실제 이동 전 사용자 확인을 받는 함수
+
+    정확히 '정리하기'를 입력해야만 실제 이동한다.
+    """
+    print()
+    print("주의: 이제 실제 파일 이동을 실행합니다.")
+    print("현재는 test_desktop 폴더 안에서만 이동되도록 제한되어 있습니다.")
+    print(f"정말 파일을 이동하려면 '{CONFIRM_TEXT}'를 입력하세요.")
+    print("취소하려면 아무 글자나 입력하거나 Enter를 누르세요.")
+    print()
+
+    user_input = input("입력: ").strip()
+
+    return user_input == CONFIRM_TEXT
+
+
+def parse_args():
+    """
+    터미널 명령어 옵션을 읽는 함수
+
+    기본:
+    python3 mover.py
+    -> dry-run 실행
+
+    실제 이동:
+    python3 mover.py --apply
+    -> 사용자 확인 후 실제 이동
+    """
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument(
+        "--apply",
+        action="store_true",
+        help="실제 파일 이동을 실행합니다.",
+    )
+
+    return parser.parse_args()
+
+
 if __name__ == "__main__":
+    args = parse_args()
+
     path_plan = build_path_plan()
 
-    # 현재 챕터에서는 반드시 dry_run=True로 실행한다.
-    results = execute_move_plan(path_plan, dry_run=True)
+    if not args.apply:
+        print("현재 모드: DRY RUN")
+        print("실제 이동하려면 python3 mover.py --apply 를 실행하세요.")
+        print()
 
-    print_execution_results(results)
+        results = execute_move_plan(path_plan, dry_run=True)
+        print_execution_results(results)
+
+    else:
+        confirmed = ask_confirmation()
+
+        if not confirmed:
+            print("파일 이동을 취소했습니다.")
+        else:
+            results = execute_move_plan(path_plan, dry_run=False)
+            print_execution_results(results)
