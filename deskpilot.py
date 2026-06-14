@@ -1,6 +1,6 @@
 import argparse
 from pathlib import Path
-
+from doctor import run_checks, print_checks
 from path_planner import build_path_plan, print_path_plan
 from config import APP_FOLDER_NAME
 
@@ -285,8 +285,8 @@ def parse_args():
     subparsers = parser.add_subparsers(dest="command")
 
     subparsers.add_parser(
-        "preview",
-        help="정리 미리보기를 출력합니다.",
+        "doctor",
+        help="프로젝트 상태를 점검합니다.",
     )
 
     move_parser = subparsers.add_parser(
@@ -345,6 +345,10 @@ if __name__ == "__main__":
     elif args.command == "log":
         run_log()
 
+    elif args.command == "doctor":
+        checks = run_checks()
+        print_checks(checks)
+    
     else:
         print("명령어를 입력해주세요.")
         print()
@@ -357,3 +361,4 @@ if __name__ == "__main__":
         print("  python3 deskpilot.py redo")
         print("  python3 deskpilot.py redo --apply")
         print("  python3 deskpilot.py log")
+        print("  python3 deskpilot.py doctor")
