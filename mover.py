@@ -5,9 +5,8 @@ from pathlib import Path
 from log_store import save_move_session
 from scanner import get_desktop_path
 from path_planner import build_path_plan
+from config import MOVE_CONFIRM_TEXT, APP_FOLDER_NAME
 
-
-CONFIRM_TEXT = "정리하기"
 
 
 def create_result(item, status, message):
@@ -249,13 +248,13 @@ def ask_confirmation():
     print()
     print("주의: 이제 실제 파일 이동을 실행합니다.")
     print("현재는 test_desktop 폴더 안에서만 이동되도록 제한되어 있습니다.")
-    print(f"정말 파일을 이동하려면 '{CONFIRM_TEXT}'를 입력하세요.")
+    print(f"정말 파일을 이동하려면 '{MOVE_CONFIRM_TEXT}'를 입력하세요.")
     print("취소하려면 아무 글자나 입력하거나 Enter를 누르세요.")
     print()
 
     user_input = input("입력: ").strip()
 
-    return user_input == CONFIRM_TEXT
+    return user_input == MOVE_CONFIRM_TEXT
 
 
 def parse_args():
@@ -312,4 +311,4 @@ if __name__ == "__main__":
                 print()
                 print("이동 로그를 저장했습니다.")
                 print(f"세션 ID: {session['sessionId']}")
-                print(f"저장 위치: {get_desktop_path() / '.deskpilot' / 'move-log.json'}")
+                print(f"저장 위치: {get_desktop_path() / APP_FOLDER_NAME / 'move-log.json'}")
