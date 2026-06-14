@@ -6,8 +6,6 @@ from log_store import load_log, save_log
 from scanner import get_desktop_path
 
 
-CONFIRM_TEXT = "앞으로가기"
-
 
 def is_inside_base_path(path, base_path):
     """
@@ -224,13 +222,13 @@ def ask_confirmation():
     print()
     print("주의: 이제 실제 앞으로가기를 실행합니다.")
     print("현재는 test_desktop 폴더 안에서만 이동되도록 제한되어 있습니다.")
-    print(f"정말 앞으로가기를 하려면 '{CONFIRM_TEXT}'를 입력하세요.")
+    print(f"정말 앞으로가기를 하려면 '{REDO_CONFIRM_TEXT}'를 입력하세요.")
     print("취소하려면 아무 글자나 입력하거나 Enter를 누르세요.")
     print()
 
     user_input = input("입력: ").strip()
 
-    return user_input == CONFIRM_TEXT
+    return user_input == REDO_CONFIRM_TEXT
 
 
 def parse_args():
