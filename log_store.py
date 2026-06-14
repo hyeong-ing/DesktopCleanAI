@@ -2,6 +2,7 @@ import json
 from datetime import datetime
 
 from scanner import get_desktop_path
+from config import APP_FOLDER_NAME
 
 
 LOG_VERSION = 1
@@ -10,11 +11,8 @@ LOG_VERSION = 1
 def get_log_path():
     """
     move-log.json 파일 경로를 가져오는 함수
-
-    저장 위치:
-    test_desktop/.deskpilot/move-log.json
     """
-    return get_desktop_path() / ".deskpilot" / "move-log.json"
+    return get_desktop_path() / APP_FOLDER_NAME / "move-log.json"
 
 
 def create_empty_log():
