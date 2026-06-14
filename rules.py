@@ -1,15 +1,12 @@
 from scanner import get_desktop_path
+from config import APP_FOLDER_NAME
 
 
 def get_rules_path():
     """
     rules.txt 파일 경로를 가져오는 함수
-
-    현재는 테스트용 Desktop 폴더 안의 .deskpilot/rules.txt를 사용한다.
-    예:
-    ~/Desktop/test_desktop/.deskpilot/rules.txt
     """
-    return get_desktop_path() / ".deskpilot" / "rules.txt"
+    return get_desktop_path() / APP_FOLDER_NAME / "rules.txt"
 
 
 def read_rules():
