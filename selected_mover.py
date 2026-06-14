@@ -4,6 +4,7 @@ from path_planner import build_path_plan
 from mover import execute_move_plan, print_execution_results, ask_confirmation
 from log_store import save_move_session
 from scanner import get_desktop_path
+from config import APP_FOLDER_NAME
 
 
 def print_selectable_plan(path_plan):
@@ -215,4 +216,4 @@ if __name__ == "__main__":
                     print()
                     print("이동 로그를 저장했습니다.")
                     print(f"세션 ID: {session['sessionId']}")
-                    print(f"저장 위치: {get_desktop_path() / '.deskpilot' / 'move-log.json'}")
+                    print(f"저장 위치: {get_desktop_path() / APP_FOLDER_NAME / 'move-log.json'}")
